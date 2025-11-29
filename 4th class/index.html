@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Simple Site — Welcome</title>
+    <meta name="description" content="A small example website with some words and simple layout." />
+    <style>
+        :root{
+            --bg:#f6f8fb;
+            --card:#ffffff;
+            --accent:#2563eb;
+            --muted:#6b7280;
+            --radius:12px;
+            --max-width:980px;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+        }
+        html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#ffffff);color:#0f172a;}
+        .container{max-width:var(--max-width);margin:32px auto;padding:24px;}
+        header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px;}
+        .brand{display:flex;align-items:center;gap:12px;font-weight:700;color:var(--accent);text-decoration:none;}
+        .logo{width:44px;height:44px;background:linear-gradient(135deg,var(--accent),#7c3aed);border-radius:10px;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
+        nav a{margin-left:12px;color:var(--muted);text-decoration:none;font-weight:600}
+        nav a:hover{color:var(--accent)}
+        .hero{display:grid;grid-template-columns:1fr;gap:18px;align-items:center;padding:28px;border-radius:var(--radius);background:var(--card);box-shadow:0 6px 20px rgba(2,6,23,0.06)}
+        @media(min-width:760px){ .hero{grid-template-columns:1fr 320px} }
+        h1{margin:0;font-size:clamp(1.6rem,2.6vw,2.4rem)}
+        p.lead{margin:8px 0 0;color:var(--muted);line-height:1.5}
+        .words{background:linear-gradient(180deg,#fbfdff,#f6f9ff);padding:18px;border-radius:10px;border:1px solid rgba(37,99,235,0.06)}
+        .grid{display:grid;grid-template-columns:repeat(1,1fr);gap:16px;margin-top:18px}
+        @media(min-width:760px){ .grid{grid-template-columns:repeat(3,1fr)} }
+        .card{background:var(--card);padding:16px;border-radius:10px;border:1px solid rgba(15,23,42,0.04)}
+        .muted{color:var(--muted);font-size:.95rem}
+        footer{margin-top:28px;padding:16px 0;color:var(--muted);text-align:center;font-size:.95rem}
+        .cta{display:inline-block;margin-top:12px;padding:10px 16px;background:var(--accent);color:#fff;border-radius:8px;text-decoration:none;font-weight:600}
+        ul{margin:8px 0 0;padding-left:18px}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <a class="brand" href="#">
+                <span class="logo" aria-hidden="true">S</span>
+                Simple Site
+            </a>
+            <nav aria-label="Main navigation">
+                <a href="#about">About</a>
+                <a href="#words">Words</a>
+                <a href="#contact">Contact</a>
+            </nav>
+        </header>
+
+        <main>
+            <section class="hero" aria-labelledby="hero-title">
+                <div>
+                    <h1 id="hero-title">Welcome to this simple website</h1>
+                    <p class="lead">This is a complete, single-file HTML example. It includes a header, content sections, and a footer — all in one place.</p>
+
+                    <div class="grid" aria-hidden="false">
+                        <article class="card">
+                            <strong>Purpose</strong>
+                            <p class="muted">Show a compact layout and some sample text to get started quickly.</p>
+                        </article>
+
+                        <article class="card">
+                            <strong>Design</strong>
+                            <p class="muted">Clean, responsive, and easy to customize. Use these cards to highlight features.</p>
+                        </article>
+
+                        <article class="card">
+                            <strong>Action</strong>
+                            <p class="muted">Edit this file to replace words, colors, and structure with your own content.</p>
+                        </article>
+                    </div>
+                </div>
+
+                <aside class="words" id="words" aria-labelledby="words-title">
+                    <h3 id="words-title">Some words</h3>
+                    <p class="muted">Here are a few words and short phrases to illustrate text content:</p>
+                    <ul>
+                        <li>Simple</li>
+                        <li>Responsive</li>
+                        <li>Readable</li>
+                        <li>Customizable</li>
+                        <li>Accessible</li>
+                    </ul>
+                    <a class="cta" href="#contact">Get in touch</a>
+                </aside>
+            </section>
+
+            <section id="about" style="margin-top:20px">
+                <h2 style="margin:0 0 8px">About this page</h2>
+                <p class="muted">This page is intentionally minimal. It demonstrates a basic, semantic structure suitable for starting a small project or landing page. Replace these words with your own story, products, or portfolio items.</p>
+            </section>
+
+            <section id="contact" style="margin-top:18px">
+                <h2 style="margin:0 0 8px">Contact</h2>
+                <p class="muted">You can add a contact form, links to social profiles, or an email address below.</p>
+                <div class="card" style="margin-top:12px">
+                    <strong>Email</strong>
+                    <p class="muted" style="margin:6px 0 0">hello@example.com</p>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            © <span id="year"></span> Simple Site — A tiny example with some words.
+        </footer>
+    </div>
+
+    <script>
+        // small script to set current year
+        document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>
