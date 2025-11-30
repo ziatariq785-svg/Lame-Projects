@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Mini Map</title>
+
+    <!-- Leaflet CSS -->
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-sA+4Z0m3bY2kWv9k2k0K0Qxgq4o3XwWqU5p+3f8y0wA="
+        crossorigin=""
+    />
+
+    <style>
+        html,body { height:100%; margin:0; font-family:system-ui,Segoe UI,Roboto,Arial; }
+        #map { height:100vh; width:100%; }
+        .controls {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 1000;
+            display:flex;
+            gap:8px;
+            align-items:center;
+        }
+        .search {
+            display:flex;
+            gap:6px;
+            background:rgba(255,255,255,0.95);
+            padding:6px;
+            border-radius:8px;
+            box-shadow:0 2px 6px rgba(0,0,0,0.15);
+        }
+        .search input {
+            width:260px;
+            padding:6px 8px;
+            border:1px solid #ccc;
+            border-radius:6px;
+            outline:none;
+        }
+        .btn {
+            padding:6px 9px;
+            background:#1976d2;
+            color:white;
+            border:none;
+            border-radius:6px;
+            cursor:pointer;
+        }
+        .btn.secondary { background:#fff; color:#1976d2; border:1px solid #d0d7de; }
+        .results {
+            position:absolute;
+            top:48px;
+            left:0;
+            width:100%;
+            max-height:260px;
+            overflow:auto;
+            background:rgba(255,255,255,0.98);
+            border-radius:8px;
+            box-shadow:0 4px 12px rgba(0,0,0,0.15);
+            display:none;
+            z-index:1001;
+        }
+        .result-item {
+            padding:8px;
+            border-bottom:1px solid #eee;
+            cursor:pointer;
+        }
+        .result-item:hover { background:#f6f8fa; }
+        .attribution {
+            position:absolute;
+            right:8px;
+            bottom:8px;
+            z-index:1000;
+            background:rgba(255,255,255,0.9);
+            padding:6px 8px;
+            border-radius:6px;
+            font-size:12px;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <div class="controls">
+        <div class="search" id="searchBox">
+            <input id="q" placeholder="Search places (e.g. coffee, address, city)" autocomplete="off" />
+            <button class="btn" id="searchBtn">Search</button>
+            <button class="btn secondary" id="clearBtn">Clear</button>
+
+            <div class="results" id="results"></div>
+        </div>
+        <button class="btn" id="locateBtn" title="Find my location">Locate</button>
+    </div>
+
+    <div class="attribution">
+        Tiles: OpenStreetMap • Map UI: demo
+    </div>
+
+    <!-- Leaflet JS -->
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-o9N1j7kP1gGk6kWl4gvyQGQv5Jk5b7f0Z+3b2p6b8I0="
+        crossorigin=""
+    ></script>
+
+    <script>
+        // Basic Leaflet map
+        const map = L.map('map', { zoomControl: true }).setView([20, 0], 2);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        let currentMarker = null;
+
+        function setMarker(lat, lon, label) {
+            if (currentMarker) map.removeLayer(currentMarker);
+            currentMarker = L.marker([lat, lon]).addTo(map);
+            currentMarker.bindPopup(label || `Lat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}`).openPopup();
+        }
+
+        // Reverse geocode helper (Nominatim)
+        async function reverseGeocode(lat, lon) {
+            try {
+                const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`;
+                const res = await fetch(url);
+                if (!res.ok) return null;
+                const data = await res.json();
+                return data.display_name || null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // Click on map: place marker and show reverse geocode
+        map.on('click', async (e) => {
+            const { lat, lng } = e.latlng;
+            const name = await reverseGeocode(lat, lng);
+            setMarker(lat, lng, name || `Lat: ${lat.toFixed(6)}, Lon: ${lng.toFixed(6)}`);
+        });
+
+        // Geolocation
+        document.getElementById('locateBtn').addEventListener('click', () => {
+            map.locate({ setView: true, maxZoom: 16, watch: false });
+        });
+
+        map.on('locationfound', (e) => {
+            setMarker(e.latlng.lat, e.latlng.lng, 'You are here');
+        });
+
+        map.on('locationerror', () => {
+            alert('Could not get location');
+        });
+
+        // Simple search using Nominatim
+        const qInput = document.getElementById('q');
+        const searchBtn = document.getElementById('searchBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const resultsEl = document.getElementById('results');
+
+        async function search(query) {
+            if (!query) return;
+            resultsEl.style.display = 'none';
+            resultsEl.innerHTML = '';
+            try {
+                const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(query)}&limit=8`;
+                const res = await fetch(url);
+                const items = await res.json();
+                if (!items || items.length === 0) {
+                    resultsEl.innerHTML = '<div class="result-item">No results</div>';
+                    resultsEl.style.display = 'block';
+                    return;
+                }
+                items.forEach(it => {
+                    const div = document.createElement('div');
+                    div.className = 'result-item';
+                    div.textContent = it.display_name;
+                    div.addEventListener('click', () => {
+                        const lat = parseFloat(it.lat), lon = parseFloat(it.lon);
+                        map.setView([lat, lon], Math.max(14, parseInt(it.importance || 14)));
+                        setMarker(lat, lon, it.display_name);
+                        resultsEl.style.display = 'none';
+                    });
+                    resultsEl.appendChild(div);
+                });
+                resultsEl.style.display = 'block';
+            } catch (e) {
+                resultsEl.innerHTML = '<div class="result-item">Search error</div>';
+                resultsEl.style.display = 'block';
+            }
+        }
+
+        searchBtn.addEventListener('click', () => search(qInput.value));
+        qInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') search(qInput.value);
+            if (e.key === 'Escape') {
+                resultsEl.style.display = 'none';
+            }
+        });
+
+        clearBtn.addEventListener('click', () => {
+            qInput.value = '';
+            resultsEl.style.display = 'none';
+        });
+
+        // Close results when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!document.getElementById('searchBox').contains(e.target)) {
+                resultsEl.style.display = 'none';
+            }
+        });
+
+        // Start with a sample marker
+        setMarker(37.4219999, -122.0840575, 'Sample marker');
+        map.setView([37.422, -122.084], 13);
+    </script>
+</body>
+</html>
